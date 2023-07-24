@@ -25,13 +25,13 @@ from datetime import datetime
 import matplotlib.dates as mdates
 import statsmodels.api as sm
 from dateutil.parser import parse
-import matplotlib.dates as mdates
 
 
-#instance label encoder
-le = LabelEncoder()
-
+# Set plots to be embedded inline
 %matplotlib inline
+
+# Instantiate label encoder
+le = LabelEncoder()
 ```
 
 ### Load prosperLoanData dataset and see the description of properties
@@ -59,7 +59,7 @@ These features may provide insights into a borrower's financial situation, credi
 
 
 ```python
-# descriptive analysis of df
+# Perform descriptive analysis of df
 df.info()
 df.describe()
 ```
@@ -393,13 +393,24 @@ df.describe()
 ```python
 # drop missing values > 30%
 def removeNulls(dataframe, axis =1, percent=0.3):
+    """
+    Remove rows or columns from a DataFrame if a certain percentage of their values are null.
+    
+    Parameters:
+    dataframe (pd.DataFrame): the original DataFrame
+    axis (int): 0 to drop rows, 1 to drop columns (default is 1)
+    percent (float): threshold for the percentage of null values (default is 0.3)
+    
+    Returns:
+    pd.DataFrame: the cleaned DataFrame
+    """
     df = dataframe.copy()
     ishape = df.shape
     if axis == 0:
         rownames = df.transpose().isnull().sum()
         rownames = list(rownames[rownames.values > percent*len(df)].index)
         df.drop(df.index[rownames],inplace=True) 
-        print("\nNumber of Rows droppedt: ",len(rownames))
+        print("\nNumber of Rows dropped: ",len(rownames))
     else:
         colnames = (df.isnull().sum()/len(df))
         colnames = list(colnames[colnames.values>=percent].index)
@@ -408,7 +419,7 @@ def removeNulls(dataframe, axis =1, percent=0.3):
     print("\nOld dataset rows,columns",ishape,"\nNew dataset rows,columns",df.shape)
     return df
 
-# apply removeNulls
+# apply removeNulls to df
 df_clean = removeNulls(df, axis= 1, percent = 0.3)
 ```
 
@@ -418,38 +429,54 @@ df_clean = removeNulls(df, axis= 1, percent = 0.3)
     New dataset rows,columns (113937, 69)
     
 
-### Columns to investigate
+### Columns of Interest to Investigate
 
 
 
 ```python
-# select interesting columns to investigate
-col = ['StatedMonthlyIncome','ProsperRating (numeric)','IsBorrowerHomeowner','LoanStatus'
-       ,'BorrowerAPR','BorrowerRate','TotalCreditLinespast7years',
-'Occupation','Term','DebtToIncomeRatio','AvailableBankcardCredit']
-df_filter = df_clean.loc[:, col]
 
-# create year from datetime 
 
+# create year from datetime
 def extract_year(data_string):
+    """
+    Extract the year from a date string.
+    
+    Parameters:
+    date_string (str): a date in string format
+    
+    Returns:
+    int: the year
+    """
     date_object = pd.to_datetime(data_string)
     return date_object.year
 
+# select columns of interest to investigate
+cols = ['StatedMonthlyIncome','ProsperRating (numeric)','IsBorrowerHomeowner','LoanStatus'
+       ,'BorrowerAPR','BorrowerRate','TotalCreditLinespast7years',
+'Occupation','Term','DebtToIncomeRatio','AvailableBankcardCredit']
 
-df_filter['Year'] = df['ListingCreationDate'].apply(extract_year)
+# Check if all columns exist in the DataFrame
+assert all(col in df_clean.columns for col in cols), "One or more columns are not in the DataFrame."
 
-# Convert 'ListingCreationDate' to datetime using dateutil's parse
-df_filter['date'] = df['ListingCreationDate'].apply(parse)
+df_filtered = df_clean.loc[:, cols]
+# Extract year from 'ListingCreationDate'
+if 'ListingCreationDate' in df.columns:
+    df_filtered['Year'] = df['ListingCreationDate'].apply(extract_year)
+else:
+    print("'ListingCreationDate' column is not in the DataFrame.")
+
+# Convert 'ListingCreationDate' to datetime
+df_filtered['date'] = df['ListingCreationDate'].apply(parse)
 
 # Create 'Month' and 'Week' columns
-df_filter['Month'] = df_filter['date'].dt.month
-df_filter['Week'] =df_filter['date'].dt.isocalendar().week
+df_filtered['Month'] = df_filtered['date'].dt.month
+df_filtered['Week'] = df_filtered['date'].dt.isocalendar().week
 
 # Create 'month_year' column
-df_filter['month_year'] = df_filter['date'].dt.to_period('M')
+df_filtered['month_year'] = df_filtered['date'].dt.to_period('M')
 
 # Check the result
-print(df_filter[['date', 'Year', 'Month', 'Week', 'month_year']])
+print(df_filtered[['date', 'Year', 'Month', 'Week', 'month_year']])
 ```
 
                               date  Year  Month  Week month_year
@@ -476,6 +503,16 @@ Since I wanted to use of home ownership status and status of a loean as input va
 ```python
 #encode Loan Status and save in new column:
 def status(value):
+    """
+    Encode 'LoanStatus' values into four categories: "Loss", "Due", "Current", and "Completed".
+    
+    Parameters:
+    value (str): the original 'LoanStatus' value
+    
+    Returns:
+    str: the encoded loan status
+    """
+    
     if value ==  "Chargedoff" or value == "Defaulted" :
         return "Loss"
     elif value == "Past Due (1-15 days)" or value == "Past Due (31-60 days)" or value == "Past Due (91-120 days)" or value == "Past Due (61-90 days)" or value == "Past Due (16-30 days)" or value == "Past Due (>120 days)":
@@ -484,9 +521,11 @@ def status(value):
         return "Current"
     elif value == "Completed":
         return "Completed"
-    
-df_filter['StatusLoan'] = df_filter['LoanStatus'].map(status)
-display(df_filter.head(5))
+# Encode 'LoanStatus' and save in new column    
+df_filtered['StatusLoan'] = df_filtered['LoanStatus'].map(status)
+
+# Display the updated df
+display(df_filtered.head(5))
 ```
 
 
@@ -622,16 +661,32 @@ display(df_filter.head(5))
 
 
 ```python
-#encode Loan Status
-columns = ['IsBorrowerHomeowner']
-df_filter['IsBorrowerHomeowner'] = df_filter[columns].apply(lambda col: le.fit_transform(col))
+# Check if 'IsBorrowerHomeowner' column exists in the DataFrame
+if 'IsBorrowerHomeowner' in df_filtered.columns:
+    # Encode 'IsBorrowerHomeowner' column
+    df_filtered['IsBorrowerHomeowner'] = le.fit_transform(df_filtered['IsBorrowerHomeowner'])
+else:
+    print("'IsBorrowerHomeowner' column is not in the DataFrame.")
 
-display(df_filter.head(3))
+# Display the first three rows of the DataFrame
+display(df_filtered.head(3))
 ```
 
 
 <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -752,18 +807,16 @@ def remove_outliers_iqr(df, column_name):
     new_df = df[(df[column_name] >= lower_bound) & (df[column_name] <= upper_bound)]
     
     return new_df
-
-
-
 ```
 
 
 ```python
-df_filter = remove_outliers_iqr(df_filter, 'BorrowerAPR')
+# Apply remove_outliers_iqr to handle outlier
+df_filtered = remove_outliers_iqr(df_filtered, 'BorrowerAPR')
 
 # Create Histogram
 plt.figure(figsize=(5,3))
-plt.hist(df_filter['BorrowerAPR'], bins=20)
+plt.hist(df_filtered['BorrowerAPR'], bins=20)
 
 # Label
 plt.xlabel('BorrowerAPR')
@@ -790,18 +843,18 @@ Since there are missing values in the ProsperRating (numeric) column, I handle t
 
 ```python
 # Handling missing values
-median_prosperRating = df_filter['ProsperRating (numeric)'].median()
+median_prosperRating = df_filtered['ProsperRating (numeric)'].median()
 
 # count missing values
 
-missing_values = (df_filter['ProsperRating (numeric)'].isnull().sum() / df_filter.shape[0]) * 100
+missing_values = (df_filtered['ProsperRating (numeric)'].isnull().sum() / df_filtered.shape[0]) * 100
 print(f"Missing values: {missing_values} ")
 
 # Fill na values with median
-df_filter['ProsperRating (numeric)'].fillna(median_prosperRating, inplace= True)
+df_filtered['ProsperRating (numeric)'].fillna(median_prosperRating, inplace= True)
 
 # visualize
-sb.histplot(data=df_filter, x='ProsperRating (numeric)')
+sb.histplot(data=df_filtered, x='ProsperRating (numeric)')
 
 
 # show the plot
@@ -834,13 +887,19 @@ In this case I handle the outliers with applying the interquartile range and plo
 
 
 ```python
-# boxplot
-df_filter = remove_outliers_iqr(df_filter, 'BorrowerRate')
+# Check if 'BorrowerRate' and 'Year' columns exist in the DataFrame
+if 'BorrowerRate' in df_filtered.columns and 'Year' in df_filtered.columns:
+    # Remove outliers from 'BorrowerRate'
+    df_filtered = remove_outliers_iqr(df_filtered, 'BorrowerRate')
 
-plt.figure(figsize=(7, 3))
-sb.boxplot(x=df_filter['Year'], y=df_filter['BorrowerRate'])
-plt.title('BorrowerRate by Year', fontsize=10)
-plt.show()
+    # Create boxplot of 'BorrowerRate' by year
+    plt.figure(figsize=(7, 3))
+    sb.boxplot(x=df_filtered['Year'], y=df_filtered['BorrowerRate'])
+    plt.title('BorrowerRate by Year', fontsize=10)
+    plt.show()
+else:
+    print("'BorrowerRate' or 'Year' column is not in the DataFrame.")
+
 ```
 
 
@@ -856,20 +915,20 @@ The Stated Monthly Income is an important factor in loan analysis. It is a key i
 
 
 ```python
-df_filter = remove_outliers_iqr(df_filter, 'StatedMonthlyIncome')
-df_filter['StatedMonthlyIncome'].hist(bins=30,grid = False)
+# Check if 'StatedMonthlyIncome' column exists in the DataFrame
+if 'StatedMonthlyIncome' in df_filtered.columns:
+    # Remove outliers from 'StatedMonthlyIncome'
+    df_filtered = remove_outliers_iqr(df_filtered, 'StatedMonthlyIncome')
+
+    # Create histogram of 'StatedMonthlyIncome'
+    df_filtered['StatedMonthlyIncome'].hist(bins=30, grid=False)
+else:
+    print("'StatedMonthlyIncome' column is not in the DataFrame.")
 ```
 
 
-
-
-    <Axes: >
-
-
-
-
     
-![png](output_27_1.png)
+![png](output_27_0.png)
     
 
 
@@ -882,7 +941,7 @@ Since value "professional" and "other" don't tell meaningful data, I drop this a
 
 ```python
 # Create a new DataFrame that excludes the values 'Professional' and 'Other'
-df_filter = df_filter.loc[~df_filter['Occupation'].isin(['Professional', 'Other'])]
+df_filter = df_filtered.loc[~df_filtered['Occupation'].isin(['Professional', 'Other'])]
 
 counts = df_filter['Occupation'].value_counts()
 
@@ -901,7 +960,7 @@ ax.set_title('Histogram Occupation')
 ax.set_xticklabels(counts.index, rotation = 90, fontsize=8)
 ```
 
-    C:\Users\w83602\AppData\Local\Temp\ipykernel_6640\4027715444.py:18: UserWarning: FixedFormatter should only be used together with FixedLocator
+    C:\Users\w83602\AppData\Local\Temp\ipykernel_19072\2214900646.py:18: UserWarning: FixedFormatter should only be used together with FixedLocator
       ax.set_xticklabels(counts.index, rotation = 90, fontsize=8)
     
 
@@ -982,29 +1041,30 @@ ax.set_xticklabels(counts.index, rotation = 90, fontsize=8)
     
 
 
-This histogram shows the distribution of varied borrowers occupations, excluding "Others" and "Professional". I can see from the histogram that the most common borrowers are Computer Programmer and Executive with the least common of borrowers are Judge and Student. This visualisation may be useful in understandig the patterns related to loan outcomes. 
+This histogram shows the distribution of varied borrowers occupations, excluding "Others" and "Professional". It can be seen from the histogram that the most common borrowers are Computer Programmer and Executive with the least common of borrowers are Judge and Student. This visualisation may be useful in understandig the patterns related to loan outcomes. 
 
 ### 6. Debt to Income Ratio
 Since value professional and other don't tell meaningful data, I drop this and recreate the histogram
 
 
 ```python
-df_filter = remove_outliers_iqr(df_filter, 'DebtToIncomeRatio')
+# Handling outliers with interquartile 
+df_filtered = remove_outliers_iqr(df_filter, 'DebtToIncomeRatio')
 
 # Handling missing values
-debtToIncomeRatio = df_filter['DebtToIncomeRatio'].median()
+debtToIncomeRatio = df_filtered['DebtToIncomeRatio'].median()
 
 
 # Fill na values with median
-df_filter['DebtToIncomeRatio'].fillna(debtToIncomeRatio, inplace= True)
+df_filtered['DebtToIncomeRatio'].fillna(debtToIncomeRatio, inplace= True)
 pd.reset_option('display.max_rows')
 np.set_printoptions(threshold=1000)
 
-print(df_filter['DebtToIncomeRatio'].value_counts())
+print(df_filtered['DebtToIncomeRatio'].value_counts())
 
 # visualize
 
-df_filter['DebtToIncomeRatio'].hist(bins=30,grid = False)
+df_filtered['DebtToIncomeRatio'].hist(bins=30,grid = False)
 
 # set plot title and x-axis label
 plt.title('Debt To Income Ratio')
@@ -1017,7 +1077,7 @@ plt.xlabel('Debt to Income Ratio')
     0.18000    2418
     0.22000    2229
     0.17000    2123
-    0.20000    2117weW
+    0.20000    2117
     0.14000    2061
                ... 
     0.19496       1
@@ -1026,6 +1086,13 @@ plt.xlabel('Debt to Income Ratio')
     0.19877       1
     0.31080       1
     Name: count, Length: 810, dtype: int64
+    
+
+    C:\Users\w83602\AppData\Local\Temp\ipykernel_19072\864652417.py:9: SettingWithCopyWarning: 
+    A value is trying to be set on a copy of a slice from a DataFrame
+    
+    See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+      df_filtered['DebtToIncomeRatio'].fillna(debtToIncomeRatio, inplace= True)
     
 
 
@@ -1037,7 +1104,7 @@ plt.xlabel('Debt to Income Ratio')
 
 
     
-![png](output_33_2.png)
+![png](output_33_3.png)
     
 
 
@@ -1051,36 +1118,28 @@ To analyse loan status, intuitively I groupped the categories into meaningful gr
 
 
 ```python
-# simplify loan status
-def status(value):
-    if value ==  "Chargedoff" or value == "Defaulted" :
-        return "Loss"
-    elif value == "Past Due (1-15 days)" or value == "Past Due (31-60 days)" or value == "Past Due (91-120 days)" or value == "Past Due (61-90 days)" or value == "Past Due (16-30 days)" or value == "Past Due (>120 days)":
-        return "Due"
-    elif value == "Current":
-        return "Current"
-    elif value == "Completed":
-        return "Completed"
+# Check if 'StatusLoan' column exists in the DataFrame
+if 'StatusLoan' in df_filtered.columns:
+    # Count the occurrences of each value in 'StatusLoan'
+    status_counts = df_filtered['StatusLoan'].value_counts()
 
-# map loan status in status loan     
-df_filter['StatusLoan'] = df_filter['LoanStatus'].map(status)
+    # Calculate and print the proportions of these counts
+    status_proportions = status_counts / status_counts.sum() * 100
+    print(status_proportions)
 
-count = df_filter['StatusLoan'].value_counts()
+    plt.figure(figsize=(8, 4))
 
-proportions = count / count.sum() * 100
+    # Define the order of the categories
+    status_order = ["Completed", "Due", "Current", "Loss"]
 
-print(proportions)
+    # Set the 'rocket' palette with the desired order
+    colors = sb.color_palette("Set2", len(status_order))
+    custom_palette = dict(zip(status_order, colors))
 
-plt.figure(figsize=(8,4))
-
-# define order of categories
-order = ["Completed","Due","Current","Loss"]
-
-# set the 'rocket' palette with the desired order
-colors = sb.color_palette("Set2", len(order))
-custom_palette = dict(zip(order, colors))
-
-sb.countplot(x='StatusLoan', data =df_filter, hue = 'StatusLoan', palette=custom_palette)
+    # Create a count plot of 'StatusLoan'
+    sb.countplot(x='StatusLoan', data=df_filtered, hue='StatusLoan', palette=custom_palette)
+else:
+    print("'StatusLoan' column is not in the DataFrame.")
 
 ```
 
@@ -1093,15 +1152,8 @@ sb.countplot(x='StatusLoan', data =df_filter, hue = 'StatusLoan', palette=custom
     
 
 
-
-
-
-
-
-
-
     
-![png](output_36_2.png)
+![png](output_36_1.png)
     
 
 
@@ -1111,17 +1163,25 @@ After the categories of Loan Status groupped, the largest categories of "Current
 
 
 ### 1. Home ownership and the status loan
-Home ownership is often seen as a significant indicator of financial stability. By comparing home ownership to loan status, there are insights into whether or not owning a home influences the likelihood of a loan being paid off, being current, or going into a loss status.
+Home ownership is often seen as a significant indicator of financial stability. By comparing home ownership to loan status, it offers insights into whether or not owning a home influences the likelihood of a loan being paid off, being current, or going into a loss status.
 
 
 ```python
-# does home ownership contributes the the status loan?
+# Define color pallete for the plots
 my_palette = sb.color_palette("tab10", 2)[::-1]
 
-counts_homeOwner = df_filter.groupby('StatusLoan')['IsBorrowerHomeowner'].value_counts()
+# Group by 'StatusLoan' and count occurrences of 'IsBorrowerHomeowner'
+# This gives us the number of homeowners and non-homeowners for each loan status
+counts_homeOwner = df_filtered.groupby('StatusLoan')['IsBorrowerHomeowner'].value_counts()
+
+# Print the counts
 print(counts_homeOwner)
 
-grid = sb.FacetGrid(df_filter,col='StatusLoan', height=3.2, aspect=1.6, col_wrap=1)
+# Create a FacetGrid that represents a matrix of plots
+# The 'col' parameter indicates that there should be a separate plot for each 'StatusLoan' value
+# The 'height' and 'aspect' parameters control the size of the plots
+# The 'col_wrap' parameter indicates that the plots should be arranged in a single column
+grid = sb.FacetGrid(df_filtered,col='StatusLoan', height=3.2, aspect=1.6, col_wrap=1)
 grid.map(sb.countplot, 'IsBorrowerHomeowner', palette=my_palette)
 grid.set_axis_labels('IsBorrowerHomeowner', 'Count')
 ```
@@ -1137,8 +1197,10 @@ grid.set_axis_labels('IsBorrowerHomeowner', 'Count')
                 1                       3886
     Name: count, dtype: int64
     
+    
 ![png](output_40_3.png)
     
+
 
 This histogram provides a breakdown of loan statuses ('Completed', 'Current', 'Due', and 'Loss') by home ownership (represented by 0 for 'No' and 1 for 'Yes'). Completed Loans: Out of all the completed loans, 11,659 were borrowed by non-homeowners and 10,273 by homeowners. This suggests that both homeowners and non-homeowners have a good track record of completing their loans.
 Current Loans: For the current loans, 17,077 are with homeowners and 15,723 with non-homeowners. This indicates that a slightly higher number of homeowners have loans that are currently active and in good standing.
@@ -1150,14 +1212,27 @@ Total Credit Lines in Past 7 Years and Loan Status: The number of credit lines t
 
 
 ```python
-df_filter = remove_outliers_iqr(df_filter, 'TotalCreditLinespast7years')
+# Check if 'TotalCreditLinespast7years' and 'StatusLoan' columns exist in the DataFrame
+if 'TotalCreditLinespast7years' in df_filtered.columns and 'StatusLoan' in df_filtered.columns:
+    # Remove outliers from 'TotalCreditLinespast7years'
+    df_filtered = remove_outliers_iqr(df_filtered, 'TotalCreditLinespast7years')
 
-counts_credit = df_filter.groupby('StatusLoan')['TotalCreditLinespast7years'].value_counts()
-print(counts_credit)
-sb.boxplot(x="StatusLoan", y="TotalCreditLinespast7years", data=df_filter)
-sb.set(rc={'figure.figsize':(10,4)})
-sb.set_style("whitegrid")
-sb.set_palette("Set2")
+    # Count the occurrences of each value in 'TotalCreditLinespast7years' for each 'StatusLoan' value
+    counts_credit = df_filtered.groupby('StatusLoan')['TotalCreditLinespast7years'].value_counts()
+
+    # Print these counts
+    print(counts_credit)
+
+    # Create a boxplot of 'TotalCreditLinespast7years' by 'StatusLoan'
+    sb.boxplot(x="StatusLoan", y="TotalCreditLinespast7years", data=df_filtered)
+
+    # Set the figure size, plot style, and color palette
+    sb.set(rc={'figure.figsize':(10, 4)})
+    sb.set_style("whitegrid")
+    sb.set_palette("Set2")
+else:
+    print("'TotalCreditLinespast7years' or 'StatusLoan' column is not in the DataFrame.")
+
 ```
 
     StatusLoan  TotalCreditLinespast7years
@@ -1189,14 +1264,30 @@ The Prosper rating is a custom risk score built using historical Prosper data. I
 
 
 ```python
-grid = sb.FacetGrid(df_filter,col='StatusLoan', height=3.2, aspect=1.6, col_wrap=1, palette ='tab10')
-grid.map(sb.countplot,'ProsperRating (numeric)', alpha=0.5)
+# Check if 'ProsperRating (numeric)' and 'StatusLoan' columns exist in the DataFrame
+if 'ProsperRating (numeric)' in df_filtered.columns and 'StatusLoan' in df_filtered.columns:
+    # Create a FacetGrid that represents a matrix of plots
+    # The 'col' parameter indicates that there should be a separate plot for each 'StatusLoan' value
+    # The 'height' and 'aspect' parameters control the size of the plots
+    # The 'col_wrap' parameter indicates that the plots should be arranged in a single column
+    # The 'palette' parameter sets the color palette for the plots
+    grid = sb.FacetGrid(df_filtered, col='StatusLoan', height=3.2, aspect=1.6, col_wrap=1, palette ='tab10')
 
+    # For each subplot in the FacetGrid, create a count plot of 'ProsperRating (numeric)'
+    # The 'alpha' parameter controls the transparency of the bars in the count plot
+    grid.map(sb.countplot, 'ProsperRating (numeric)', alpha=0.5)
+else:
+    print("'ProsperRating (numeric)' or 'StatusLoan' column is not in the DataFrame.")
 
+```
+
+    c:\Users\w83602\AppData\Local\Programs\Python\Python310\lib\site-packages\seaborn\axisgrid.py:712: UserWarning: Using the countplot function without specifying `order` is likely to produce an incorrect plot.
+      warnings.warn(warning)
+    
 
 
     
-![png](output_47_2.png)
+![png](output_47_1.png)
     
 
 
@@ -1208,6 +1299,7 @@ Since Status Loans is the important outcome variable to the loan performance and
 
 
 ```python
+# Select datasets of interests
 cols = ['StatedMonthlyIncome', 'TotalCreditLinespast7years','BorrowerRate',
        'StatusLoan']
 
@@ -1228,9 +1320,9 @@ sb.pairplot(data=df_filter[cols], hue='StatusLoan',  diag_kind='kde', diag_kws={
     
 
 
-### From this plot, the following can be observed:
+### From this plot, the following can observed:
 
-1. Stated Monthly Income vs. Total Credit Lines in past 7 years: This plot shows a similar distribution as our earlier scatter plots. There's no clear pattern or relationship between these variables.
+1. Stated Monthly Income vs. Total Credit Lines in past 7 years: This plot shows a similar distribution as our earlier scatter plots. There's no clear pattern or relationship between these two variables.
 
 2. Stated Monthly Income vs. Borrower Rate: Borrower rates seem to be spread across all income levels, with no clear pattern. This suggests that the borrower rate might be determined by other factors not included in this plot.
 
@@ -1239,14 +1331,18 @@ sb.pairplot(data=df_filter[cols], hue='StatusLoan',  diag_kind='kde', diag_kws={
 The distribution plots on the diagonal show that most loans are either current or completed, with a smaller number of loans being defaulted or due, similar to our earlier findings.
 
 ## Conclusions
-In my analysis of Prosper's loan data, I conducted both univariate and bivariate explorations on several variables including borrower APR, Prosper rating, borrower rate, total credit lines in the past 7 years, stated monthly income, occupation, debt to income ratio, and loan status.
+In our analysis of Prosper's loan data, I conducted both univariate and bivariate explorations on several variables including borrower APR, Prosper rating, borrower rate, total credit lines in the past 7 years, stated monthly income, occupation, debt to income ratio, and loan status.
 
 Univariate findings revealed that the majority of loans were given to borrowers with a Prosper rating of 4, reflecting a moderate level of creditworthiness. The most common APR for loans was around 20%, and borrower rates varied widely over the years. The typical stated monthly income was around $5000, and the debt to income ratio for most borrowers did not exceed 0.25, indicating a potential default risk for those with higher ratios.
 
 In the bivariate exploration, I found that homeownership seemed to influence loan outcomes. Both homeowners and non-homeowners generally completed their loans, but non-homeowners were slightly more likely to default. Furthermore, the majority of borrowers with a Prosper rating of 4 had current or completed loans, suggesting a link between creditworthiness and loan status. However, the Prosper rating did not greatly differ across different loan statuses, indicating that it might not solely predict the loan status.
 
-Finally, the multivariate analysis did not reveal any clear relationships between loan status and the other variables (stated monthly income and total credit lines in the past 7 years). This suggests that borrower rate might be influenced by factors not included in this study.
+Finally, our multivariate analysis did not reveal any clear relationships between loan status and the other variables (stated monthly income and total credit lines in the past 7 years). This suggests that borrower rate might be influenced by factors not included in this study.
 
-In conclusion, this exploratory analysis has provided useful insights into Prosper's loan data. The results could assist both borrowers and lenders in decision-making. However, as my findings are primarily descriptive, further statistical analysis would be required to establish causal relationships.
+In conclusion, this exploratory analysis has provided useful insights into Prosper's loan data. The results could assist both borrowers and lenders in decision-making. However, as our findings are primarily descriptive, further statistical analysis would be required to establish causal relationships.
 
 
+
+```python
+
+```
