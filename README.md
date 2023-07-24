@@ -825,7 +825,7 @@ sb.histplot(data=df_filter, x='ProsperRating (numeric)')
     
 
 
-The bulk of the data appears to be centered around 4, which is also the median value we used to fill in the missing data. The Prosper Rating (numeric) ranges from 1 to 7, indicating that the dataset includes loans from all rating categories. The shape of the distribution is somewhat multimodal, with noticeable peaks at each interger value from 1 to 7. The highest peak is at 4, which due to imputation of missing values to the median (25.5%). In conclusion, the distribution tells us that the loans in the dataset are fairly evenly spread across the different Prosper Rating categories, with the median risk loans (rating 4) constitute to the largest group. This partly influenced by our imputation method, where we filled missing values with median rating.
+The bulk of the data appears to be centered around 4, which is also the median value I used to fill in the missing data. The Prosper Rating (numeric) ranges from 1 to 7, indicating that the dataset includes loans from all rating categories. The shape of the distribution is somewhat multimodal, with noticeable peaks at each interger value from 1 to 7. The highest peak is at 4, which due to imputation of missing values to the median (25.5%). In conclusion, the distribution tells us that the loans in the dataset are fairly evenly spread across the different Prosper Rating categories, with the median risk loans (rating 4) constitute to the largest group. This partly influenced by our imputation method, where I filled missing values with median rating.
 
 ### 3. Borrower Rate
 Borrower rate distribution
@@ -849,7 +849,7 @@ plt.show()
     
 
 
-From the boxplot of BorrowerRate, we can see that the median has been varied from year to year. The distribution of the rates each year has been quite diverse, as shown by different box sizes and whisker lengths. 
+From the boxplot of BorrowerRate, I can see that the median has been varied from year to year. The distribution of the rates each year has been quite diverse, as shown by different box sizes and whisker lengths. 
 
 ### 4. Stated Monthly Income
 The Stated Monthly Income is an important factor in loan analysis. It is a key indicator of the ability of the borrower to pay back the loan, can influence the amount of money they are able to borrow, affect interest rate, and determine risk assessment. Handling the outliers with interquartile range is impletemented to clean the data before visualizing the distribution of Stated Monthly Income.
@@ -982,7 +982,7 @@ ax.set_xticklabels(counts.index, rotation = 90, fontsize=8)
     
 
 
-This histogram shows the distribution of varied borrowers occupations, excluding "Others" and "Professional". We can see from the histogram that the most common borrowers are Computer Programmer and Executive with the least common of borrowers are Judge and Student. This visualisation may be useful in understandig the patterns related to loan outcomes. 
+This histogram shows the distribution of varied borrowers occupations, excluding "Others" and "Professional". I can see from the histogram that the most common borrowers are Computer Programmer and Executive with the least common of borrowers are Judge and Student. This visualisation may be useful in understandig the patterns related to loan outcomes. 
 
 ### 6. Debt to Income Ratio
 Since value professional and other don't tell meaningful data, I drop this and recreate the histogram
@@ -1017,7 +1017,7 @@ plt.xlabel('Debt to Income Ratio')
     0.18000    2418
     0.22000    2229
     0.17000    2123
-    0.20000    2117
+    0.20000    2117weW
     0.14000    2061
                ... 
     0.19496       1
@@ -1095,7 +1095,7 @@ sb.countplot(x='StatusLoan', data =df_filter, hue = 'StatusLoan', palette=custom
 
 
 
-    <Axes: xlabel='StatusLoan', ylabel='count'>
+
 
 
 
@@ -1111,7 +1111,7 @@ After the categories of Loan Status groupped, the largest categories of "Current
 
 
 ### 1. Home ownership and the status loan
-Home ownership is often seen as a significant indicator of financial stability. By comparing home ownership to loan status, we can gain insights into whether or not owning a home influences the likelihood of a loan being paid off, being current, or going into a loss status.
+Home ownership is often seen as a significant indicator of financial stability. By comparing home ownership to loan status, there are insights into whether or not owning a home influences the likelihood of a loan being paid off, being current, or going into a loss status.
 
 
 ```python
@@ -1137,23 +1137,8 @@ grid.set_axis_labels('IsBorrowerHomeowner', 'Count')
                 1                       3886
     Name: count, dtype: int64
     
-
-    C:\Users\w83602\AppData\Local\Programs\Python\Python310\lib\site-packages\seaborn\axisgrid.py:712: UserWarning: Using the countplot function without specifying `order` is likely to produce an incorrect plot.
-      warnings.warn(warning)
-    
-
-
-
-
-    <seaborn.axisgrid.FacetGrid at 0x2900459f550>
-
-
-
-
-    
 ![png](output_40_3.png)
     
-
 
 This histogram provides a breakdown of loan statuses ('Completed', 'Current', 'Due', and 'Loss') by home ownership (represented by 0 for 'No' and 1 for 'Yes'). Completed Loans: Out of all the completed loans, 11,659 were borrowed by non-homeowners and 10,273 by homeowners. This suggests that both homeowners and non-homeowners have a good track record of completing their loans.
 Current Loans: For the current loans, 17,077 are with homeowners and 15,723 with non-homeowners. This indicates that a slightly higher number of homeowners have loans that are currently active and in good standing.
@@ -1161,7 +1146,7 @@ Due Loans: Among the loans that are due, 587 belong to non-homeowners and 544 to
 Loss Loans: The loans marked as 'Loss' are those where the lender has marked it off as a loss, indicating that the borrower has defaulted. Here, non-homeowners have a higher count (5,555) compared to homeowners (4,236). This might suggest that non-homeowners are slightly more likely to default on their loans.
 
 ### 2. TotalCreditLinespast7years vs Status Loan
-Total Credit Lines in Past 7 Years and Loan Status: The number of credit lines that a person has had in the past 7 years can tell us about their borrowing behavior. A large number of credit lines might indicate a higher risk of over-borrowing and defaulting on loans. Conversely, a smaller number of credit lines might indicate a more cautious approach to borrowing. By examining this factor in conjunction with loan status, we can explore these potential relationships further. After handling the outliner, then the plot the spread of the data with boxplot.
+Total Credit Lines in Past 7 Years and Loan Status: The number of credit lines that a person has had in the past 7 years can tell us about their borrowing behavior. A large number of credit lines might indicate a higher risk of over-borrowing and defaulting on loans. Conversely, a smaller number of credit lines might indicate a more cautious approach to borrowing. By examining this factor in conjunction with loan status, I can explore these potential relationships further. After handling the outliner, then the plot the spread of the data with boxplot.
 
 
 ```python
@@ -1200,7 +1185,7 @@ Looking at the medians of different groups between "Current", "Completed", "Due"
 
 ### 3. Prosper Rating and Status Loan
 
-The Prosper rating is a custom risk score built using historical Prosper data. It is intended to give a quick summary of the estimated risk of a particular loan. By comparing this with the loan status, we can see the relationship between the two data sets.
+The Prosper rating is a custom risk score built using historical Prosper data. It is intended to give a quick summary of the estimated risk of a particular loan. By comparing this with the loan status, I can see the relationship between the two data sets.
 
 
 ```python
@@ -1243,9 +1228,9 @@ sb.pairplot(data=df_filter[cols], hue='StatusLoan',  diag_kind='kde', diag_kws={
     
 
 
-### From this plot, we can observe the following:
+### From this plot, the following can be observed:
 
-1. Stated Monthly Income vs. Total Credit Lines in past 7 years: This plot shows a similar distribution as our earlier scatter plots. There's no clear pattern or relationship between these two variables.
+1. Stated Monthly Income vs. Total Credit Lines in past 7 years: This plot shows a similar distribution as our earlier scatter plots. There's no clear pattern or relationship between these variables.
 
 2. Stated Monthly Income vs. Borrower Rate: Borrower rates seem to be spread across all income levels, with no clear pattern. This suggests that the borrower rate might be determined by other factors not included in this plot.
 
@@ -1254,18 +1239,14 @@ sb.pairplot(data=df_filter[cols], hue='StatusLoan',  diag_kind='kde', diag_kws={
 The distribution plots on the diagonal show that most loans are either current or completed, with a smaller number of loans being defaulted or due, similar to our earlier findings.
 
 ## Conclusions
-In our analysis of Prosper's loan data, we conducted both univariate and bivariate explorations on several variables including borrower APR, Prosper rating, borrower rate, total credit lines in the past 7 years, stated monthly income, occupation, debt to income ratio, and loan status.
+In my analysis of Prosper's loan data, I conducted both univariate and bivariate explorations on several variables including borrower APR, Prosper rating, borrower rate, total credit lines in the past 7 years, stated monthly income, occupation, debt to income ratio, and loan status.
 
 Univariate findings revealed that the majority of loans were given to borrowers with a Prosper rating of 4, reflecting a moderate level of creditworthiness. The most common APR for loans was around 20%, and borrower rates varied widely over the years. The typical stated monthly income was around $5000, and the debt to income ratio for most borrowers did not exceed 0.25, indicating a potential default risk for those with higher ratios.
 
-In the bivariate exploration, we found that homeownership seemed to influence loan outcomes. Both homeowners and non-homeowners generally completed their loans, but non-homeowners were slightly more likely to default. Furthermore, the majority of borrowers with a Prosper rating of 4 had current or completed loans, suggesting a link between creditworthiness and loan status. However, the Prosper rating did not greatly differ across different loan statuses, indicating that it might not solely predict the loan status.
+In the bivariate exploration, I found that homeownership seemed to influence loan outcomes. Both homeowners and non-homeowners generally completed their loans, but non-homeowners were slightly more likely to default. Furthermore, the majority of borrowers with a Prosper rating of 4 had current or completed loans, suggesting a link between creditworthiness and loan status. However, the Prosper rating did not greatly differ across different loan statuses, indicating that it might not solely predict the loan status.
 
-Finally, our multivariate analysis did not reveal any clear relationships between loan status and the other variables (stated monthly income and total credit lines in the past 7 years). This suggests that borrower rate might be influenced by factors not included in this study.
+Finally, the multivariate analysis did not reveal any clear relationships between loan status and the other variables (stated monthly income and total credit lines in the past 7 years). This suggests that borrower rate might be influenced by factors not included in this study.
 
-In conclusion, this exploratory analysis has provided useful insights into Prosper's loan data. The results could assist both borrowers and lenders in decision-making. However, as our findings are primarily descriptive, further statistical analysis would be required to establish causal relationships.
+In conclusion, this exploratory analysis has provided useful insights into Prosper's loan data. The results could assist both borrowers and lenders in decision-making. However, as my findings are primarily descriptive, further statistical analysis would be required to establish causal relationships.
 
 
-
-```python
-
-```
