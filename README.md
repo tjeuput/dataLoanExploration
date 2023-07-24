@@ -1244,17 +1244,6 @@ The Prosper rating is a custom risk score built using historical Prosper data. I
 grid = sb.FacetGrid(df_filter,col='StatusLoan', height=3.2, aspect=1.6, col_wrap=1, palette ='tab10')
 grid.map(sb.countplot,'ProsperRating (numeric)', alpha=0.5)
 
-```
-
-    C:\Users\w83602\AppData\Local\Programs\Python\Python310\lib\site-packages\seaborn\axisgrid.py:712: UserWarning: Using the countplot function without specifying `order` is likely to produce an incorrect plot.
-      warnings.warn(warning)
-    
-
-
-
-
-    <seaborn.axisgrid.FacetGrid at 0x29000b9b9a0>
-
 
 
 
