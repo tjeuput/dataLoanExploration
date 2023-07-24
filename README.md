@@ -1,4 +1,4 @@
-# Part I - (Dataset Exploration)
+# Data Loan Prosper Exploration
 ## by Putri Wulandari
 
 ## Introduction
